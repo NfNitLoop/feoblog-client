@@ -1,11 +1,17 @@
 
-import * as protobuf from "./private/protobuf/feoblog_pb.js"
-export { protobuf }
+import * as pb from "./private/protobuf/feoblog.ts"
+export { pb as protobuf }
 
 import { b58c, hex, nacl } from "./private/deps.ts"
 
 // Initialize nacl functions. else: https://github.com/denosaurs/sodium/issues/2 🤦‍♂️
 await nacl.ready
+
+// Servers must accept items up to this size:
+const MAX_ITEM_SIZE = 32 * 1024 // 32KiB
+// Some servers may increase max item size? Eh, we'll be lenient in what we accept
+// Though, we do want to protect against trying to load absolutely massive ones in the browser:
+const LENIENT_MAX_ITEM_SIZE = 1024 * 1024 // 1 MiB
 
 // A basic client for talking to a FeoBlog server.
 export class Client {
@@ -15,12 +21,114 @@ export class Client {
         this.baseURL = baseURL
     }
 
-    // async getItem(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<Item|null> {
-    //     let bytes = await this.getItemBytes(userID, signature, options)
-    //     if (bytes === null) return null
-    //     return Item.deserialize(bytes)
-    // }
+    async getItem(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<pb.Item|null> {
+        let bytes = await this.getItemBytes(userID, signature, options)
+        if (bytes === null) return null
+        return pb.Item.deserialize(bytes)
+    }
+
+    // Like getItem(), but returns the item bytes instead of a parsed Item.
+    // This is useful if you need to ensure the signature remains valid for the Item. 
+    // (ex: when copying Items to other servers)
+    async getItemBytes(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<Uint8Array|null> {
+        
+        // Perform validation of these before sending:
+        if (typeof userID === "string") {
+            userID = UserID.fromString(userID)
+        }
+        if (typeof signature === "string") {
+            signature = Signature.fromString(signature)
+        }
+
+        let url = `${this.baseURL}/u/${userID}/i/${signature}/proto3`
+        let response = await fetch(url)
+
+        if (response.status == 404) { return null }
+
+        if (!response.ok) {
+            throw `${url} response error: ${response.status}: ${response.statusText}`
+        }
+        let lengthHeader = response.headers.get("content-length")
+        if (lengthHeader === null) {
+            throw `The server didn't return a length for ${url}`
+        }
+        let length = parseInt(lengthHeader)
+        if (length > LENIENT_MAX_ITEM_SIZE) {
+            throw `${url} returned ${length} bytes! (max supported is ${LENIENT_MAX_ITEM_SIZE})`
+        }
+        if (length == 0) {
+            throw `Got 0 bytes`
+        }
+
+        let buf = await response.arrayBuffer()
+        let bytes = new Uint8Array(buf)
+
+        // Note: This is a bit expensive when we're bulk-loading items.
+        // But, if we don't check them when we load them from the server, what's the
+        // point of having the signatures?
+        if (!options?.skipSignatureCheck) {
+            if (!signature.isValid(userID,bytes)) {
+                throw `Invalid signature for ${url}`
+            }
+        }
+
+        return bytes
+    }
+
+    // paginating through an ItemList endpoint.
+    async * getUserItems(userID: UserID): AsyncGenerator<pb.ItemListEntry> {
+        let before: number|undefined = undefined
+        while (true) {
+
+            let list: pb.ItemList = await this.getItemList(`/u/${userID}/proto3`, {before})
+
+            if (list.items.length == 0) {
+                // There are no more items.
+                return
+            }
     
+            for (let entry of list.items) yield entry
+            
+            if (list.no_more_items) {
+                return
+            }
+    
+            before = list.items[list.items.length - 1].timestamp_ms_utc
+        }
+    }
+
+     // itemsPath: relative path to the thing that yields an ItemsList, ex: /homepage/proto3
+    // params: Any HTTP GET params we might send to that path for pagination.
+    private async getItemList(itemsPath: string, params?: Record<string,string|number|undefined>): Promise<pb.ItemList> {
+
+        let url = this.baseURL + itemsPath
+        if (params) {
+            let sp = new URLSearchParams()
+            for (let [key, value] of Object.entries(params)) {
+                if (value === undefined) continue
+                sp.set(key, value.toString())
+            }
+            url = `${url}?${sp}`
+        }
+
+        let response = await fetch(url)
+        if (!response.ok) {
+            console.error(`non-OK response from ${url}`, response)
+            throw `Invalid response: ${response.status}: ${response.statusText}`
+        }
+
+        let buf = await response.arrayBuffer()
+        let bytes = new Uint8Array(buf)
+        return pb.ItemList.deserialize(bytes)
+    }
+    
+}
+
+export type GetItemOptions = {
+    // When syncing items from one server to another, the receiving server MUST 
+    // perform the verificiation, so verifying in the client is redundant and slow.
+    // Set this flag to skip it.
+    skipSignatureCheck?: boolean
 }
 
 
@@ -101,7 +209,7 @@ export class Signature {
     }
 
     isValid(userID: UserID, bytes: Uint8Array): boolean {
-        return nacl.crypto_sign_verify_detached(bytes, this.bytes, userID.bytes)
+        return nacl.crypto_sign_verify_detached(this.bytes, bytes, userID.bytes)
     }
 
     static fromString(userID: string): Signature {

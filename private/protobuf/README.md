@@ -7,7 +7,15 @@ First, make sure you've got [protoc] installed.
 Next, grab the latest copy of the protobuf file from
 <https://github.com/NfNitLoop/feoblog/blob/develop/protobufs/feoblog.proto>
 
-Then use <https://deno.land/x/deno_google_protobuf@4.0.0-rc.2> as directed:
+Then use <https://github.com/thesayyn/protoc-gen-ts> as directed:
 
-    protoc --js_out=import_style=commonjs,binary:. feoblog.proto
-    deno run --allow-read --allow-write https://deno.land/x/deno_google_protobuf/tools/build.ts . .
+    npm install -g protoc-gen-ts
+    protoc -I. --ts_out=. feoblog.proto
+
+Then manually fix-up the import statment in `feoblog.ts` from
+
+    import * as pb_1 from "google-protobuf";
+
+to:
+
+    import * as pb_1 from "./google_protobuf.ts";
