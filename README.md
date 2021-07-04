@@ -6,4 +6,4 @@ For API Docs, see: <https://doc.deno.land/x/feoblog_client/mod.ts>
 
 [FeoBlog]: https://github.com/NfNitLoop/feoblog/
 [Deno]: https://deno.land/
-[rss-to-feoblog]: https://github.com/NfNitLoop/rss2fb/
+[rss2fb]: https://github.com/NfNitLoop/rss2fb/
