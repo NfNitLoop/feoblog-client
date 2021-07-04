@@ -121,7 +121,31 @@ export class Client {
         let bytes = new Uint8Array(buf)
         return pb.ItemList.deserialize(bytes)
     }
+
+    // Write an item to the server.
+    // This assumes you have provided a valid userID & signature for the given bytes.
+    // (The receiving server will check it, though!)
+    async putItem(userID: UserID, signature: Signature, bytes: Uint8Array): Promise<Response> {
     
+        let url = `${this.baseURL}/u/${userID}/i/${signature}/proto3`
+        
+        let response: Response
+        try {
+            response = await fetch(url, {
+                method: "PUT",
+                body: bytes,
+            })
+            if (!response.ok) {
+                throw `Error uploading Item: ${response.status} ${response.statusText}`
+            }
+
+        } catch (e) {
+            console.error("PUT exception:", e)
+            throw e
+        }
+
+        return response
+    }
 }
 
 export type GetItemOptions = {
@@ -279,9 +303,11 @@ export class PrivateKey
         }
     }
 
-    // TODO: sign()
-    //     let binSignature = nacl.sign.detached(itemBytes, keypair.secretKey)
-    //     signature = bs58.encode(binSignature)
+    sign(messageBytes: Uint8Array): Signature {
+        let sigBytes = nacl.crypto_sign_detached(messageBytes, this.privateKeyBytes)
+        return Signature.fromBytes(sigBytes)
+    }
+
     // TODO: generate()
 }
 
