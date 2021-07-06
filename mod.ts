@@ -146,6 +146,65 @@ export class Client {
 
         return response
     }
+
+    /** 
+     * Like {@link getItem}, but just gets the latest profile that a server knows about for a given user ID.
+     * The signature is returned in a header from the server. This function verifies that signature
+     * before returning the Item.
+     * We also verify that the Item has a Profile.
+     */
+    async getProfile(userID: UserID|string): Promise<ProfileResult|null> {
+        
+        // Perform validation of these before sending:
+        if (typeof userID === "string") {
+            userID = UserID.fromString(userID)
+        }
+
+        const url = `${this.baseURL}/u/${userID}/profile/proto3`
+        const response = await fetch(url)
+
+        if (response.status == 404) { return null }
+
+        if (!response.ok) {
+            throw `${url} response error: ${response.status}: ${response.statusText}`
+        }
+        const lengthHeader = response.headers.get("content-length")
+        if (lengthHeader === null) {
+            console.log("response:", response)
+            throw `The server didn't return a length for ${url}`
+        }
+        const length = parseInt(lengthHeader)
+        if (length > LENIENT_MAX_ITEM_SIZE) {
+            throw `${url} returned ${length} bytes! (max supported is ${LENIENT_MAX_ITEM_SIZE})`
+        }
+        if (length == 0) {
+            throw `Got 0 bytes`
+        }
+
+        const sigHeader = response.headers.get("signature")
+        if (sigHeader === null || sigHeader === "") {
+            throw `The server did not return a signature for ${url}`
+        }
+        const signature = Signature.fromString(sigHeader)
+
+        const buf = await response.arrayBuffer()
+        const bytes = new Uint8Array(buf)
+
+        if (!await signature.isValid(userID, bytes)) {
+            throw `Invalid signature for ${url}`
+        }
+
+        let item: pb.Item
+        try {
+            item = pb.Item.deserialize(bytes)
+        } catch (exception) {
+            throw `Error deserializing ${url}: ${exception}`
+        }
+        if (item.profile === null) {
+            throw `Server returned an Item for ${url} that is not a Profile.`
+        }
+        return {item, signature, bytes}
+    }
 }
 
 export type GetItemOptions = {
@@ -153,6 +212,16 @@ export type GetItemOptions = {
     // perform the verificiation, so verifying in the client is redundant and slow.
     // Set this flag to skip it.
     skipSignatureCheck?: boolean
+}
+
+/**
+ * When we load a profile, we don't know its signature until it's loaded.
+ * Return the signature w/ the Item:
+ */
+export interface ProfileResult {
+    item: pb.Item
+    signature: Signature
+    bytes: Uint8Array
 }
 
 
