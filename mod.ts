@@ -7,13 +7,20 @@ import { b58c, hex, nacl } from "./private/deps.ts"
 // Initialize nacl functions. else: https://github.com/denosaurs/sodium/issues/2 🤦‍♂️
 await nacl.ready
 
-// Servers must accept items up to this size:
-const MAX_ITEM_SIZE = 32 * 1024 // 32KiB
+/**
+ * Servers must accept items up to this size.
+ */
+export const MINIMUM_MAX_ITEM_SIZE = 32 * 1024 // 32KiB
+
 // Some servers may increase max item size? Eh, we'll be lenient in what we accept
 // Though, we do want to protect against trying to load absolutely massive ones in the browser:
 const LENIENT_MAX_ITEM_SIZE = 1024 * 1024 // 1 MiB
 
-// A basic client for talking to a FeoBlog server.
+/**
+ * A basic client for talking to a FeoBlog server.
+ * 
+ * {@link https://github.com/nfnitloop/feoblog}
+ */
 export class Client {
     baseURL: string
 
@@ -21,15 +28,24 @@ export class Client {
         this.baseURL = baseURL
     }
 
+    /**
+     * Get a single Item from a FeoBlog server.
+     * @param userID 
+     * @param signature 
+     * @param options 
+     * @returns 
+     */
     async getItem(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<pb.Item|null> {
         let bytes = await this.getItemBytes(userID, signature, options)
         if (bytes === null) return null
         return pb.Item.deserialize(bytes)
     }
 
-    // Like getItem(), but returns the item bytes instead of a parsed Item.
-    // This is useful if you need to ensure the signature remains valid for the Item. 
-    // (ex: when copying Items to other servers)
+    /** 
+     * Like {@link getItem}, but returns the item bytes instead of a parsed Item.
+     * This is useful if you need to ensure the signature remains valid for the Item. 
+     * (ex: when copying Items to other servers)
+     */
     async getItemBytes(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<Uint8Array|null> {
         
         // Perform validation of these before sending:
@@ -75,7 +91,10 @@ export class Client {
         return bytes
     }
 
-    // paginating through an ItemList endpoint.
+    /**
+     * Paginate through a user's items.
+     * Handles making multiple server requests for you as needed.
+     */
     async * getUserItems(userID: UserID): AsyncGenerator<pb.ItemListEntry> {
         let before: number|undefined = undefined
         while (true) {
@@ -122,9 +141,11 @@ export class Client {
         return pb.ItemList.deserialize(bytes)
     }
 
-    // Write an item to the server.
-    // This assumes you have provided a valid userID & signature for the given bytes.
-    // (The receiving server will check it, though!)
+    /**
+     * Write an item to the server.
+     * This assumes you have provided a valid userID & signature for the given bytes.
+     * (The receiving server will check it, though!)
+     */
     async putItem(userID: UserID, signature: Signature, bytes: Uint8Array): Promise<Response> {
     
         let url = `${this.baseURL}/u/${userID}/i/${signature}/proto3`
@@ -208,9 +229,11 @@ export class Client {
 }
 
 export type GetItemOptions = {
-    // When syncing items from one server to another, the receiving server MUST 
-    // perform the verificiation, so verifying in the client is redundant and slow.
-    // Set this flag to skip it.
+    /**
+     * Usually, you want to check the signatures of Items you retrieve to make sure they
+     * haven't been tampered with. But sometimes that can be redundant. In those cases,
+     * you can opt to skip the check.
+     */
     skipSignatureCheck?: boolean
 }
 
@@ -226,7 +249,9 @@ export interface ProfileResult {
 
 
 export type Config = {
-    // The base URL of the server. Ex:  "https://blog.example.com:443/"
+    /**
+     * The base URL of a FeoBlog server. Ex:  "https://blog.example.com:443/"
+     */
     baseURL: string
 }
 
@@ -237,7 +262,11 @@ const SEED_BYTES = 32;
 // The number of bytes if we base64-decode without checksum:
 const PASSWORD_BYTES = SEED_BYTES + 4 // 4 bytes b58 checksum.
 
-
+/**
+ * UserIDs in FeoBlog are NaCL signing keys.
+ * 
+ * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
+ */
 export class UserID {
     readonly bytes: Uint8Array
     // These almost always get turned into strings
@@ -294,6 +323,11 @@ export class UserID {
     }
 }
 
+/**
+ * A detached NaCL signature over an Item.
+ * 
+ * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
+ */
 export class Signature {
     readonly bytes: Uint8Array
 
@@ -337,14 +371,24 @@ export class Signature {
     }
 }
 
-// Private keys are stored as base58check-encoded strings.
-// You should keep a PrivateKey in memory for as short a time as possible.
+/**
+ * Private keys are stored as base58check-encoded strings.
+ * They are only necessary to sign new pieces of content.
+ * You should keep a PrivateKey in memory for as short a time as possible.
+ * 
+ * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
+ */
 export class PrivateKey
 {
     private seedBytes: Uint8Array
     private privateKeyBytes: Uint8Array
 
-    // The public key/ID corresponding to this PrivateKey
+    /**
+     * The public key/ID corresponding to this PrivateKey
+     *
+     * (The userID can be derived from the base58check-encoded "password", which
+     * is the seed used to generate a NaCL pub/priv signing keypair.)
+     */
     readonly userID: UserID
 
     private constructor(seedBytes: Uint8Array) {
@@ -363,7 +407,9 @@ export class PrivateKey
         return new PrivateKey(seedBytes)
     }
 
-    // construct from a base58check-encoded string.
+    /**
+     * construct from a base58check-encoded string.
+     */
     static async fromString(checkedString: string): Promise<PrivateKey> { 
         try {
             return PrivateKey.fromBytes(await b58c.decode(checkedString))
