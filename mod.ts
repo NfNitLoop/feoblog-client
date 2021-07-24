@@ -16,6 +16,9 @@ export const MINIMUM_MAX_ITEM_SIZE = 32 * 1024 // 32KiB
 // Though, we do want to protect against trying to load absolutely massive ones in the browser:
 const LENIENT_MAX_ITEM_SIZE = 1024 * 1024 // 1 MiB
 
+// Before sending files larger than this, we should check whether they exist:
+const SMALL_FILE_THRESHOLD = 1024 * 128
+
 /**
  * A basic client for talking to a FeoBlog server.
  * 
@@ -122,22 +125,22 @@ export class Client {
 
         let url = this.baseURL + itemsPath
         if (params) {
-            let sp = new URLSearchParams()
-            for (let [key, value] of Object.entries(params)) {
+            const sp = new URLSearchParams()
+            for (const [key, value] of Object.entries(params)) {
                 if (value === undefined) continue
                 sp.set(key, value.toString())
             }
             url = `${url}?${sp}`
         }
 
-        let response = await fetch(url)
+        const response = await fetch(url)
         if (!response.ok) {
             console.error(`non-OK response from ${url}`, response)
             throw `Invalid response: ${response.status}: ${response.statusText}`
         }
 
-        let buf = await response.arrayBuffer()
-        let bytes = new Uint8Array(buf)
+        const buf = await response.arrayBuffer()
+        const bytes = new Uint8Array(buf)
         return pb.ItemList.deserialize(bytes)
     }
 
@@ -146,26 +149,76 @@ export class Client {
      * This assumes you have provided a valid userID & signature for the given bytes.
      * (The receiving server will check it, though!)
      */
-    async putItem(userID: UserID, signature: Signature, bytes: Uint8Array): Promise<Response> {
-    
-        let url = `${this.baseURL}/u/${userID}/i/${signature}/proto3`
+    async putItem(userID: UserID, signature: Signature, bytes: Uint8Array): Promise<void> {
+        const url = `${this.baseURL}/u/${userID}/i/${signature}/proto3`
         
-        let response: Response
-        try {
-            response = await fetch(url, {
-                method: "PUT",
-                body: bytes,
-            })
-            if (!response.ok) {
-                throw `Error uploading Item: ${response.status} ${response.statusText}`
-            }
+        const response: Response = await fetch(url, {
+            method: "PUT",
+            body: bytes,
+        })
+        if (!response.ok) {
+            throw `Error uploading Item: ${response.status} ${response.statusText}`
+        }
+    }
 
-        } catch (e) {
-            console.error("PUT exception:", e)
-            throw e
+    async putAttachment(userID: UserID, signature: Signature, fileName: string, fileSize: number, reader: BodyInit): Promise<void> {
+        // If the file is large, try saving some bandwidth if we can:
+        if (fileSize > SMALL_FILE_THRESHOLD) {
+            const { exists } = await this.getAttachmentMeta(userID, signature, fileName)
+            if (exists) {
+                // console.log("Attachment exists")
+                // The file already exists in the content-store.
+                return
+            }
         }
 
-        return response
+        const url = this.attachmentURL(userID, signature, fileName)
+        let response
+        try {
+            response = await fetch(url, {
+                method: "PUT", 
+                headers: {
+                    "Content-Length": `${fileSize}`
+                },
+                body: reader,
+            })
+        } catch (error) {
+            if (error instanceof TypeError) {
+                const { exists } = await this.getAttachmentMeta(userID, signature, fileName)
+                if (exists) {
+                    // console.log("recovered from TypeError. Attachment exists")
+                    // Consider our upload a success:
+                    return
+                }
+            }
+            throw error
+        }
+
+        if (!response.ok) {
+            throw `Error uploading attachment ${fileName}: ${response.status} ${response.statusText}`
+        }
+    }
+
+    private attachmentURL(userID: UserID, signature: Signature, fileName: string) {
+        return `${this.baseURL}/u/${userID}/i/${signature}/files/${fileName}`
+    }
+
+    async getAttachmentMeta(userID: UserID, signature: Signature, fileName: string): Promise<AttachmentMeta> {
+        const url = this.attachmentURL(userID, signature, fileName)
+        const response = await fetch(url, {
+            method: "HEAD",
+        })
+
+        let exists = false
+        if (response.status == 200) {
+            exists = true
+        } else if (response.status != 404) {
+            throw `Unexpected response status: ${response.status}: ${response.statusText}`
+        }
+
+        const exceedsQuota = response.headers.get("X-FB-Quota-Exceeded") == "1"
+
+        return { exists, exceedsQuota }
     }
 
     /** 
@@ -226,6 +279,13 @@ export class Client {
         }
         return {item, signature, bytes}
     }
+}
+
+export type AttachmentMeta = {
+    // The attachment already exists at the target location.
+    exists: boolean,
+    // Sending the attachment would exceed the user's quota:
+    exceedsQuota: boolean,
 }
 
 export type GetItemOptions = {
