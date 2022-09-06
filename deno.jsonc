@@ -1,0 +1,6 @@
+{
+    "tasks": {
+        "test": "deno test --allow-net",
+        "build-npm": "deno run -A ./build/npm.ts"
+    }
+}

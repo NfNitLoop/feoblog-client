@@ -1,3 +1,4 @@
+// deno-lint-ignore-file prefer-const
 
 import * as pb from "./private/protobuf/feoblog.ts"
 export { pb as protobuf }
