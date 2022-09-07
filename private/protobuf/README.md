@@ -19,3 +19,10 @@ Then manually fix-up the import statment in `feoblog.ts` from
 to:
 
     import * as pb_1 from "./google_protobuf.ts";
+
+
+---
+
+I'm not crazy about checking generated code into Git. However, that's how one [publishes code to Deno][1]
+
+[1]: https://deno.land/x
