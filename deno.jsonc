@@ -4,6 +4,15 @@
         // BUF_BIGINT_DISABLE is required by @bufbuild/protobuf@0.3.0 😑
         "test": "deno test --allow-net --allow-env=BUF_BIGINT_DISABLE",
 
-        "regen": "cd private/protobuf && deno run --allow-read=. --allow-write=. --allow-run=protoc,npm,npm.cmd regenerate.ts"
+        "regen": "cd private/protobuf && deno run --allow-read=. --allow-write=. --allow-run=protoc,npm,npm.cmd regenerate.ts",
+
+        "build-npm-debug": "deno run -A --v8-flags=--stack-trace-limit=999999 ./build/npm.ts",
+
+        //works:
+        "build-npm-bigstack": "deno run -A --v8-flags=--stack-size=2000 ./build/npm.ts",
+
+        // doesn't:
+        "build-npm": "deno run -A ./build/npm.ts",
+        
     }
 }
