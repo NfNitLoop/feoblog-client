@@ -1,0 +1,14 @@
+{
+  "name": "builder",
+  "version": "1.0.0",
+  "description": "Local path to install protoc-gen-es into for build automation.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@bufbuild/protoc-gen-es": "^0.3.0"
+  }
+}

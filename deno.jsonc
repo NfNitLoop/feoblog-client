@@ -1,5 +1,9 @@
 {
     "tasks": {
-        "test": "deno test --allow-net"
+        // Weird. 
+        // BUF_BIGINT_DISABLE is required by @bufbuild/protobuf@0.3.0 😑
+        "test": "deno test --allow-net --allow-env=BUF_BIGINT_DISABLE",
+
+        "regen": "cd private/protobuf && deno run --allow-read=. --allow-write=. --allow-run=protoc,npm,npm.cmd regenerate.ts"
     }
 }

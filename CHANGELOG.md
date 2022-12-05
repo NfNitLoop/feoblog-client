@@ -1,3 +1,46 @@
+v1.0.0
+======
+
+Date: TBD (in progress)
+
+ * Switched to protobuf-es: <https://github.com/bufbuild/protobuf-es>
+   * Better types (proper types for optional fields)
+   * No longer relies on Google's old JS implementation.
+     (I'd had to work around issues with it numerous times.)
+ * (⚠️⚠️⚠️TODO: Test, verify) This should let the Deno feoblog-client become the
+   canonical Javascript client. (i.e.: it'll be used in the web client too.)
+
+⚠️ Breaking changes:
+
+The FeoBlog client just directly returns protobuf objects. Since protobuf-es
+returns different implementations of objects, this means this is a breaking
+API change.
+
+The types themselves have mostly the same data (delta some new fields), but
+their naming convention and access pattern will be slightly different.  As will
+(de)serialization.
+
+v0.2.1
+======
+
+Sep 24, 2022
+
+Port latest client over from FeoBlog.
+
+In particular, this includes updates to let you query for items
+before/after a particular timestamp.
+
+v0.2.0
+======
+
+July 23, 2021
+
+ * Support for uploading attachments.
+
+⚠️ Breaking changes:
+
+ * `putItem()` no longer returns a `Response`.
+
 v0.1.2
 ======
 

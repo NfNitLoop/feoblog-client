@@ -1,0 +1,7 @@
+# keep this directory in Git.
+
+# Not its files:
+*
+
+# but this file, yes.
+!.gitignore

@@ -39,7 +39,7 @@ import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, nacl, tweetn
     async getItem(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<Item|null> {
         let bytes = await this.getItemBytes(userID, signature, options)
         if (bytes === null) return null
-        return Item.deserialize(bytes)
+        return Item.fromBinary(bytes)
     }
 
     /** Like {@link getItem}, but returns the item bytes so that the signature remains valid over the (serialized) bytes. */
@@ -237,11 +237,11 @@ import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, nacl, tweetn
 
         let item: Item
         try {
-            item = Item.deserialize(bytes)
+            item = Item.fromBinary(bytes)
         } catch (exception) {
             throw `Error deserializing ${url}: ${exception}`
         }
-        if (item.profile === null) {
+        if (item.itemType.case != "profile") {
             throw `Server returned an Item for ${url} that is not a Profile.`
         }
         return {item, signature, bytes}
@@ -295,17 +295,17 @@ import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, nacl, tweetn
     
             for (let entry of list.items) yield entry
             
-            if (list.no_more_items) {
+            if (list.noMoreItems) {
                 return
             }
     
-            let lastTimestamp = list.items[list.items.length - 1].timestamp_ms_utc
+            let lastTimestamp = list.items[list.items.length - 1].timestampMsUtc
             // TODO: Also include last signature.
 
             if (isBefore) {
-                offset.before = lastTimestamp
+                offset.before = Number(lastTimestamp)
             } else {
-                offset.after = lastTimestamp
+                offset.after = Number(lastTimestamp)
             }
         }
     }
@@ -332,7 +332,7 @@ import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, nacl, tweetn
 
         let buf = await response.arrayBuffer()
         let bytes = new Uint8Array(buf)
-        return ItemList.deserialize(bytes)
+        return ItemList.fromBinary(bytes)
     }
 }
 
@@ -572,7 +572,7 @@ const USER_ID_BYTES = 32;
 const SIGNATURE_BYTES = 64;
 const PASSWORD_BYTES = USER_ID_BYTES + 4 // 4 bytes b58 checksum.
 
-const MAX_ITEM_SIZE = 32 * 1024 // 32KiB
+// const MAX_ITEM_SIZE = 32 * 1024 // 32KiB
 // Some servers may increase max item size? Eh, we'll be lenient in what we accept
 // Though, we do want to protect against trying to load absolutely massive ones in the browser:
 const LENIENT_MAX_ITEM_SIZE = 1024 * 1024 // 1 MiB
