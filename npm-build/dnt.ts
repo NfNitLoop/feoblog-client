@@ -1,8 +1,8 @@
 import {build, emptyDir } from "https://deno.land/x/dnt@0.32.0/mod.ts"
 
-const OUT_DIR = "./npm"
-
+const OUT_DIR = "./npm-build/package"
 await emptyDir(OUT_DIR)
+
 await build({
     entryPoints: [
         "./mod.ts",
@@ -14,6 +14,7 @@ await build({
         deno: "dev",
 
         // else we get: "No secure random number generator found."
+        // TODO: Should this be "dev" only?
         crypto: true,
 
     },
@@ -22,10 +23,11 @@ await build({
     },
     package: {
         name: "@nfnitloop/feoblog-client",
-        version: "0.5.0-rc1",
+        version: "0.7.0-rc1",
         browser: "mod.js",
 
-        // DNT doesn't grab the types from esm.sh, so grab them:
+        // DNT doesn't grab bs58check types from esm.sh, so grab them.
+        // I didn't need to do this for libsodium-wrappers, though?
         devDependencies: {
             "@types/bs58check": "*",
         }
