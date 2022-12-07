@@ -11,7 +11,11 @@ await build({
 
     shims: {
         // Only shim for test code:
-        deno: "dev"
+        deno: "dev",
+
+        // else we get: "No secure random number generator found."
+        crypto: true,
+
     },
     compilerOptions: {
         lib: ["es2021", "dom"]

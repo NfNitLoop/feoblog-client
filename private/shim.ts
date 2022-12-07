@@ -1,5 +1,9 @@
 // deno-lint-ignore-file prefer-const no-namespace
 
+// This file only exists to help migrate code from the feoblog server's 
+// embedded web UI to here. 
+// TODO: Once this is the canonical implementation, clean this stuff up.
+
 import { b58c, hex, nacl as crypto } from "./deps.ts";
 
 // Yech, b58c doesn't have a sync decode.

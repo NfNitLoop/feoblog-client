@@ -14,5 +14,13 @@
         // doesn't:
         "build-npm": "deno run -A ./build/npm.ts",
         
+    },
+
+    "test": {
+        "files": {
+            "exclude": [
+                "npm" // TODO: Rename
+            ]
+        }
     }
 }
