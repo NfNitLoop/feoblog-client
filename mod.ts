@@ -13,9 +13,6 @@ import { nacl } from "./private/deps.ts"
  * {@link https://github.com/nfnitloop/feoblog}
  * {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/data_format.md}
  * 
- * This client is available publicly as part of {@link https://deno.land/x/feoblog_client}.
- * That is a (mostly) copy of the Client class from
- * {@link https://github.com/NfNitLoop/feoblog/blob/develop/web-client/ts/client.ts}
  * 
  * A client takes a base_url parameter and knows how to construct REST URLs based off of that.
  * To communicate among 2+ servers, instantiate a client for each server.

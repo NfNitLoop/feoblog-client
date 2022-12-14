@@ -1,9 +1,23 @@
-A JavaScript client for [FeoBlog], written for [Deno].
+A TypeScript/JavaScript client for [FeoBlog].
 
-Right now, this is pretty minimal and is meant to support [rss2fb].
+Works in:
+  * [Deno]
+  * [Node] (Thanks to [DNT])
+  * and the browser. 
+
+This is the same client used by the FeoBlog web UI.
+
+To use in Deno:
+
+    import * as feoblog from "https://deno.land/x/feoblog_client@v0.7.0/mod.ts"
+
+From Node.js:
+
+    npm install --save feoblog-client
 
 For API Docs, see: <https://doc.deno.land/https/deno.land/x/feoblog_client/mod.ts>
 
 [FeoBlog]: https://github.com/NfNitLoop/feoblog/
 [Deno]: https://deno.land/
-[rss2fb]: https://github.com/NfNitLoop/rss2fb/
+[Node]: https://nodejs.org/en/
+[DNT]: https://github.com/denoland/dnt
