@@ -32,8 +32,7 @@ await build({
 
         // DNT doesn't grab bs58check types from esm.sh, so grab them.
         devDependencies: {
-            "@types/bs58check": "*",
-            "@types/libsodium-wrappers": "*",
+            "@types/bs58check": "*"
         },
     },
 

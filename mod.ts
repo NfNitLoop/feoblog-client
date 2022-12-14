@@ -4,7 +4,8 @@ import * as pb from "./private/protobuf/feoblog.ts"
 export { pb as protobuf }
 
 import { Item, ItemList, ItemListEntry } from "./private/protobuf/feoblog.ts";
-import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, nacl, tweetnacl } from "./private/shim.ts";
+import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58 } from "./private/shim.ts";
+import { nacl } from "./private/deps.ts"
 
 /**
  * A client to GET/PUT FeoBlog Items.
@@ -470,12 +471,13 @@ export class Signature {
     }
 
     // Check that a signature is valid.
-    isValid(userID: UserID, bytes: Uint8Array): Promise<boolean> {
-        return nacl.sign_detached_verify(bytes, this.bytes, userID.bytes)
+    // deno-lint-ignore require-await
+    async isValid(userID: UserID, bytes: Uint8Array): Promise<boolean> {
+        return this.isValidSync(userID, bytes)
     }
 
     isValidSync(userID: UserID, bytes: Uint8Array): boolean {
-        return nacl.sign_detached_verify_sync(bytes, this.bytes, userID.bytes)
+        return nacl.sign.detached.verify(bytes, this.bytes, userID.bytes)
     }
 
     static fromString(signature: string): Signature {
@@ -553,17 +555,17 @@ export class PrivateKey {
         }
 
         // Signing is not usually a bottleneck so just using current thread:
-        let keypair = tweetnacl.sign.keyPair.fromSeed(buf);        
+        let keypair = nacl.sign.keyPair.fromSeed(buf);        
 
         return new PrivateKey(keypair, privateKey)
     }
 
-    private constructor(private keyPair: tweetnacl.SignKeyPair, readonly asBase58: string) {
+    private constructor(private keyPair: nacl.SignKeyPair, readonly asBase58: string) {
         this.userID = UserID.fromBytes(keyPair.publicKey)
     }
 
     signDetached(message: Uint8Array) {
-        return tweetnacl.sign.detached(message, this.keyPair.secretKey)
+        return nacl.sign.detached(message, this.keyPair.secretKey)
     }
            
 }
