@@ -548,7 +548,7 @@ export class PrivateKey {
 
         try {
             buf = decodeBase58Check(privateKey)
-        } catch (e) {
+        } catch (_error) {
             throw "Invalid Key"
         }
 

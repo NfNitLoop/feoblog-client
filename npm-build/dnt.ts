@@ -1,6 +1,10 @@
+// See: https://github.com/denoland/dnt
+
 import {build, emptyDir } from "https://deno.land/x/dnt@0.32.0/mod.ts"
 
+// relative to project root, from where this script should be run:
 const OUT_DIR = "./npm-build/package"
+
 await emptyDir(OUT_DIR)
 
 await build({
@@ -13,9 +17,10 @@ await build({
         // Only shim for test code:
         deno: "dev",
 
-        // else we get: "No secure random number generator found."
-        // TODO: Should this be "dev" only?
-        crypto: true,
+        // shim: else we get: "No secure random number generator found" when testing.
+        // dev-only: because we're building a browser package, and crypto
+        // is available in the browser.
+        crypto: "dev",
 
     },
     compilerOptions: {
@@ -24,13 +29,12 @@ await build({
     package: {
         name: "@nfnitloop/feoblog-client",
         version: "0.7.0-rc1",
-        browser: "mod.js",
 
         // DNT doesn't grab bs58check types from esm.sh, so grab them.
-        // I didn't need to do this for libsodium-wrappers, though?
         devDependencies: {
             "@types/bs58check": "*",
-        }
+            "@types/libsodium-wrappers": "*",
+        },
     },
 
     // Don't try to build CommonJS modules.
