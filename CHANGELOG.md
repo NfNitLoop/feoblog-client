@@ -1,14 +1,17 @@
-v1.0.0
+v0.7.0
 ======
 
-Date: TBD (in progress)
+December 13, 2022
 
  * Switched to protobuf-es: <https://github.com/bufbuild/protobuf-es>
    * Better types (proper types for optional fields)
    * No longer relies on Google's old JS implementation.
      (I'd had to work around issues with it numerous times.)
- * (⚠️⚠️⚠️TODO: Test, verify) This should let the Deno feoblog-client become the
-   canonical Javascript client. (i.e.: it'll be used in the web client too.)
+ * Add [DNT] support. This makes the Deno client for FeoBlog the canonical
+   client, easily usable in both Deno and Node codebases. It will be used in
+   the default/bundled FeoBlog in-browser client as well.
+
+[DNT]: https://github.com/denoland/dnt
 
 ⚠️ Breaking changes:
 
