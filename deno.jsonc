@@ -2,8 +2,20 @@
     "tasks": {
         // Weird. 
         // BUF_BIGINT_DISABLE is required by @bufbuild/protobuf@0.3.0 😑
+        // TODO: is there a way to tell esm.sh to NOT polyfill Process.env? 
         "test": "deno test --allow-net --allow-env=BUF_BIGINT_DISABLE",
 
-        "regen": "cd private/protobuf && deno run --allow-read=. --allow-write=. --allow-run=protoc,npm,npm.cmd regenerate.ts"
+        "regen-proto": "cd private/protobuf && deno run --allow-read=. --allow-write=. --allow-run=protoc,npm,npm.cmd regenerate.ts",
+
+        "build-npm": "deno run -A ./npm-build/dnt.ts",
+        
+    },
+
+    "test": {
+        "files": {
+            "exclude": [
+                "npm-build"
+            ]
+        }
     }
 }

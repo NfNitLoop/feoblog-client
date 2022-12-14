@@ -6,4 +6,4 @@ export * as b58c from "https://deno.land/x/base58check@v0.1.4/mod.ts"
 export * as hex from "https://deno.land/std@0.100.0/encoding/hex.ts"
 
 // Used for signing/verifying Item metadata.
-export { default as nacl } from "https://deno.land/x/sodium@0.2.0/basic.ts"
+export {default as nacl } from "https://esm.sh/tweetnacl@1.0.3";
