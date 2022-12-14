@@ -16,19 +16,16 @@ await build({
     shims: {
         // Only shim for test code:
         deno: "dev",
-
-        // shim: else we get: "No secure random number generator found" when testing.
-        // dev-only: because we're building a browser package, and crypto
-        // is available in the browser.
-        crypto: "dev",
-
     },
     compilerOptions: {
         lib: ["es2021", "dom"]
     },
     package: {
-        name: "@nfnitloop/feoblog-client",
-        version: "0.7.0-rc1",
+        name: "feoblog-client",
+        version: "0.7.0",
+        homepage: "https://github.com/NfNitLoop/feoblog-client#readme",
+        description: "A client for FeoBlog, a distributed social network.",
+        keywords: ["distributed", "TypeScript", "client", "Deno", "FeoBlog"],
 
         // DNT doesn't grab bs58check types from esm.sh, so grab them.
         devDependencies: {
