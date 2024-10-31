@@ -6,12 +6,20 @@
     // public protobuf types:
     "./protobuf": "./private/protobuf/feoblog.ts",
   },
+  "license": "TBD",
+  "publish": {
+    "exclude": [
+      "private/protobuf/plugin",
+      "tests",
+      "CHANGELOG.md",
+    ]
+  },
 
   "tasks": {
     "test": "deno task test:unit && deno task test:publish",
     "test:unit": "deno test --allow-net",
-    "test:publish": "deno publish --check",
-    "regen-proto": "cd private/protobuf && deno run --allow-read=. --allow-write=. --allow-run=protoc,npm,npm.cmd regenerate.ts",
+    "test:publish": "deno publish --dry-run --allow-dirty",
+    "regen-proto": "cd private/protobuf && ./regenerate.ts",
   },
 
   "test": {
@@ -20,7 +28,7 @@
     ]
   },
   "imports": {
-    "@bufbuild/protobuf": "npm:@bufbuild/protobuf@^0.3.0",
+    "@bufbuild/protobuf": "npm:@bufbuild/protobuf@^2.2.1",
     "@std/assert": "jsr:@std/assert@^1.0.6",
     "@std/encoding": "jsr:@std/encoding@^1.0.5",
     "@std/testing": "jsr:@std/testing@^1.0.3",

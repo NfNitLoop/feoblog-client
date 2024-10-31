@@ -1,8 +1,7 @@
 // deno-lint-ignore-file prefer-const
 
-import * as pb from "./private/protobuf/feoblog.ts"
 
-import { Item, ItemList, ItemListEntry } from "./private/protobuf/feoblog.ts";
+import { Item, ItemList, type ItemListEntry, fromBinary, ItemSchema, ItemListSchema} from "./private/protobuf/types.ts";
 import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58 } from "./private/shim.ts";
 import nacl from "tweetnacl"
 
@@ -37,7 +36,7 @@ import nacl from "tweetnacl"
     async getItem(userID: UserID|string, signature: Signature|string, options?: GetItemOptions): Promise<Item|null> {
         let bytes = await this.getItemBytes(userID, signature, options)
         if (bytes === null) return null
-        return Item.fromBinary(bytes)
+        return fromBinary(ItemSchema, bytes)
     }
 
     /** Like {@link getItem}, but returns the item bytes so that the signature remains valid over the (serialized) bytes. */
@@ -235,7 +234,7 @@ import nacl from "tweetnacl"
 
         let item: Item
         try {
-            item = Item.fromBinary(bytes)
+            item = fromBinary(ItemSchema, bytes)
         } catch (exception) {
             throw `Error deserializing ${url}: ${exception}`
         }
@@ -330,7 +329,7 @@ import nacl from "tweetnacl"
 
         let buf = await response.arrayBuffer()
         let bytes = new Uint8Array(buf)
-        return ItemList.fromBinary(bytes)
+        return fromBinary(ItemListSchema, bytes)
     }
 }
 
@@ -527,7 +526,7 @@ export class Signature {
 export class PrivateKey {
     readonly userID: UserID;
 
-    static fromBase58(privateKey: string) {
+    static fromBase58(privateKey: string): PrivateKey {
 
         // Error to display about the private key:
         let buf: Uint8Array;
@@ -561,7 +560,7 @@ export class PrivateKey {
         this.userID = UserID.fromBytes(keyPair.publicKey)
     }
 
-    signDetached(message: Uint8Array) {
+    signDetached(message: Uint8Array): Uint8Array {
         return nacl.sign.detached(message, this.keyPair.secretKey)
     }
            

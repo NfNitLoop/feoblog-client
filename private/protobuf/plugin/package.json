@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@bufbuild/protoc-gen-es": "^0.3.0"
+    "@bufbuild/protoc-gen-es": "^2.2.1"
   }
 }
