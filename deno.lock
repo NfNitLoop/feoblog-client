@@ -5,6 +5,7 @@
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@std/assert@0.221": "0.221.0",
+    "jsr:@std/assert@1": "1.0.6",
     "jsr:@std/assert@^1.0.6": "1.0.6",
     "jsr:@std/bytes@0.221": "0.221.0",
     "jsr:@std/data-structures@^1.0.4": "1.0.4",

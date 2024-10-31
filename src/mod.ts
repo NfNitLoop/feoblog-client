@@ -1,8 +1,8 @@
 // deno-lint-ignore-file prefer-const
 
 
-import { Item, ItemList, type ItemListEntry, fromBinary, ItemSchema, ItemListSchema} from "./private/protobuf/types.ts";
-import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58 } from "./private/shim.ts";
+import { Item, ItemList, type ItemListEntry, fromBinary, ItemSchema, ItemListSchema} from "./protobuf/types.ts";
+import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58 } from "./shim.ts";
 import nacl from "tweetnacl"
 
 /**

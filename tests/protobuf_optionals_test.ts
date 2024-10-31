@@ -1,6 +1,6 @@
 // deno-lint-ignore-file prefer-const require-await
-import { assert } from "https://deno.land/std@0.154.0/testing/asserts.ts";
-import * as pb from "../private/protobuf/types.ts";
+import { assert } from "jsr:@std/assert@1";
+import * as pb from "../src/protobuf/types.ts";
 
 // Yay, optional values are supported AND properly typed. <3
 Deno.test("optional values", async () => {

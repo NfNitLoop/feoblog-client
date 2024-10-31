@@ -2,14 +2,16 @@
   "name": "@nfnitloop/feoblog-client",
   "version": "0.8.0",
   "exports": {
-    ".": "./mod.ts",
-    // public protobuf types:
-    "./protobuf": "./private/protobuf/feoblog.ts",
+    ".": "./src/mod.ts",
+    // Types for FeoBlog Items:
+    "./types": "./src/protobuf/types.ts",
   },
   "license": "TBD",
   "publish": {
     "exclude": [
-      "private/protobuf/plugin",
+      "src/protobuf/plugin",
+      "src/protobuf/regenerate.ts",
+      "src/protobuf/README.md",
       "tests",
       "CHANGELOG.md",
     ]
@@ -19,7 +21,7 @@
     "test": "deno task test:unit && deno task test:publish",
     "test:unit": "deno test --allow-net",
     "test:publish": "deno publish --dry-run --allow-dirty",
-    "regen-proto": "cd private/protobuf && ./regenerate.ts",
+    "regen-proto": "cd src/protobuf && ./regenerate.ts",
   },
 
   "test": {

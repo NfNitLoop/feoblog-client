@@ -2,8 +2,6 @@
 // embedded web UI to here. 
 // TODO: Once this is the canonical implementation, clean this stuff up.
 
-// import * as b58c from "noble-base58check"
-
 // UserIDs can also be displayed as hex:
 import * as hex from "@std/encoding/hex"
 
