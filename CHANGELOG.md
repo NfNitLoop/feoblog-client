@@ -1,3 +1,13 @@
+v0.8.0
+======
+
+Oct. 30, 2024
+
+ * Updated for Deno 2.0 
+ * Update to host on <https://JSR.io>
+    * No more need for DNT, since JSR allows NPM compatibility. 🎉
+    * No more errors about esm.sh hash check failures.
+
 v0.7.0
 ======
 

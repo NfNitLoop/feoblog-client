@@ -1,7 +1,6 @@
 // deno-lint-ignore-file prefer-const require-await
 import { assert } from "https://deno.land/std@0.154.0/testing/asserts.ts";
-import { protobuf } from "../mod.ts"
-import { Follow } from "../private/protobuf/feoblog.ts";
+import * as protobuf from "../private/protobuf/feoblog.ts";
 
 // Yay, optional values are supported AND properly typed. <3
 Deno.test("optional values", async () => {
@@ -13,6 +12,6 @@ Deno.test("optional values", async () => {
 })
 
 function hasGroup(follow: Uint8Array) {
-    let f = Follow.fromBinary(follow)
+    let f = protobuf.Follow.fromBinary(follow)
     return typeof(f.followGroup) == "number"
 }

@@ -2,23 +2,26 @@
 // embedded web UI to here. 
 // TODO: Once this is the canonical implementation, clean this stuff up.
 
-import { b58c, hex } from "./deps.ts";
+// import * as b58c from "noble-base58check"
 
-// Yech, b58c doesn't have a sync decode.
-import * as bs58c from "https://esm.sh/bs58check@2.1.2"
+// UserIDs can also be displayed as hex:
+import * as hex from "@std/encoding/hex"
+
+import bs58c from "bs58check"
+import bs58 from "bs58"
 
 
 
 export function bytesToHex(bytes: Uint8Array): string {
-    return hex.encodeToString(bytes)
+    return hex.encodeHex(bytes)
 }
 
 export function encodeBase58(bytes: Uint8Array): string {
-    return b58c.encodePlain(bytes)
+    return bs58.encode(bytes)
 }
 
 export function decodeBase58(value: string): Uint8Array {
-    return b58c.decodePlain(value)
+    return bs58.decode(value)
 }
 
 export function decodeBase58Check(value: string): Uint8Array {

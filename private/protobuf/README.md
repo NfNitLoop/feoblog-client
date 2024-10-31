@@ -10,10 +10,3 @@ Next, grab the latest copy of the protobuf file from
 Then run:
 
     deno task regen
-
-
----
-
-I'm not crazy about checking generated code into Git. However, that's how one [publishes code to Deno][1]
-
-[1]: https://deno.land/x

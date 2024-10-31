@@ -3,8 +3,8 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "https://esm.sh/@bufbuild/protobuf@0.3.0";
-import { Message, proto3, protoInt64 } from "https://esm.sh/@bufbuild/protobuf@0.3.0";
+import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
 
 /**
  * This is redundant with the Item.item_type oneof. But it allows us to 

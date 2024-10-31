@@ -1,11 +1,10 @@
 // deno-lint-ignore-file prefer-const
 
 import * as pb from "./private/protobuf/feoblog.ts"
-export { pb as protobuf }
 
 import { Item, ItemList, ItemListEntry } from "./private/protobuf/feoblog.ts";
 import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58 } from "./private/shim.ts";
-import { nacl } from "./private/deps.ts"
+import nacl from "tweetnacl"
 
 /**
  * A client to GET/PUT FeoBlog Items.
@@ -25,7 +24,8 @@ import { nacl } from "./private/deps.ts"
         this.base_url = config.base_url
     }
 
-    get url() {
+    /** The URL of the API server that this client will fetch from. */
+    get url(): string {
         return this.base_url
     }
 
@@ -410,14 +410,14 @@ export class UserID {
             throw new Error(`invalid userID string of type ${valType}`)
         }
         if (userID.length == 0) {
-            throw "UserID must not be empty."
+            throw new Error("UserID must not be empty.")
         }
     
         let buf: Uint8Array;
         try {
             buf = decodeBase58(userID)
-        } catch (_error) {
-            throw "UserID not valid base58"
+        } catch (cause) {
+            throw new Error("UserID not valid base58", {cause})
         }
     
         UserID.validateBytes(buf)

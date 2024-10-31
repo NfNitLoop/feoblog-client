@@ -1,7 +1,8 @@
 // deno-lint-ignore-file no-unused-vars prefer-const
-import {Client, UserID, Signature, protobuf } from "../mod.ts"
+import {Client, UserID, Signature } from "../mod.ts"
+import type * as protobuf from "../private/protobuf/feoblog.ts"
 
-import { assert, assertEquals } from "https://deno.land/std@0.154.0/testing/asserts.ts";
+import { assert, assertEquals } from "@std/assert";
 
 
 const OFFICIAL_FEOBLOG = UserID.fromString("A719rvsCkuN2SC5W2vz5hypDE2SpevNTUsEXrVFe9XQ7")
