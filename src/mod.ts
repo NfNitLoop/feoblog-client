@@ -6,7 +6,7 @@ import * as ed from "@noble/ed25519"
 import {sha512} from "@noble/hashes/sha512"
 
 // deno-lint-ignore no-unused-vars
-import type {Item, ItemList, ItemListEntry, File} from "./protobuf/types.ts"
+import type {Item, ItemList, ItemListEntry, File, Profile} from "./protobuf/types.ts"
 
 // enable sync operations in ed.*:
 // See: https://github.com/paulmillr/noble-ed25519
@@ -248,7 +248,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         if (item.itemType.case != "profile") {
             throw `Server returned an Item for ${url} that is not a Profile.`
         }
-        return {item, signature, bytes}
+        return {item: profileItem(item), signature, bytes}
     }
 
     /**
@@ -340,6 +340,16 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
     }
 }
 
+type ProfileItem = Omit<Item, "itemType"> & {itemType: Extract<Item["itemType"], {case: "profile"}>}
+
+function profileItem(item: Item): ProfileItem {
+    if (item.itemType.case != "profile") {
+        throw new Error(`Expected a profile, got an item of type: ${item.itemType.case}`)
+    }
+    // todo: Why won't TypeScript let me do this without the cast?
+    return item as ProfileItem
+}
+
 /**
  * Specifies an offset from which to start streaming items.
  * 
@@ -381,7 +391,7 @@ export type GetItemOptions = {
  * Return the signature w/ the Item
  */
 export interface ProfileResult {
-    item: Item
+    item: ProfileItem
     signature: Signature
     bytes: Uint8Array
 }

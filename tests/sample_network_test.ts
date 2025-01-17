@@ -2,7 +2,7 @@
 import {Client, UserID, Signature } from "../src/mod.ts"
 import type * as protobuf from "../src/protobuf/feoblog.ts"
 
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertExists } from "@std/assert";
 
 
 const OFFICIAL_FEOBLOG = UserID.fromString("A719rvsCkuN2SC5W2vz5hypDE2SpevNTUsEXrVFe9XQ7")
@@ -50,6 +50,13 @@ Deno.test("Fetching only some posts", async() => {
     let count = 0
     for await (let entry of entries) { count++ }
     assertEquals(3, count)
+})
+
+Deno.test(async function profileItem() {
+    const client = new Client({base_url: FIRST_SERVER})
+    const profile = await client.getProfile(OFFICIAL_FEOBLOG)
+    assertExists(profile)
+    console.log("displayName:", profile.item.itemType.value.displayName)
 })
 
 
