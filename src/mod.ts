@@ -1,10 +1,12 @@
 // deno-lint-ignore-file prefer-const
 
-
-import { Item, ItemList, type ItemListEntry, fromBinary, ItemSchema, ItemListSchema} from "./protobuf/types.ts";
+import {fromBinary, ItemSchema, ItemListSchema} from "./protobuf/types.ts";
 import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, encodeBase58Check } from "./shim.ts";
 import * as ed from "@noble/ed25519"
 import {sha512} from "@noble/hashes/sha512"
+
+// deno-lint-ignore no-unused-vars
+import type {Item, ItemList, ItemListEntry, File} from "./protobuf/types.ts"
 
 // enable sync operations in ed.*:
 // See: https://github.com/paulmillr/noble-ed25519
@@ -591,6 +593,26 @@ export class PrivateKey {
     }
            
 }
+
+/**
+ * A sha-512 hash of some bytes.
+ * 
+ * This is used to calculate/validate {@link File} attachments.
+ */
+export class AttachmentHash {
+    static fromBytes(bytes: Uint8Array): AttachmentHash {
+        const hashBytes = sha512(bytes)
+        const asHex = ed.etc.bytesToHex(hashBytes)
+        return new AttachmentHash(hashBytes, asHex)
+    }
+
+    static fromBuf(buf: ArrayBuffer): AttachmentHash {
+        return AttachmentHash.fromBytes(new Uint8Array(buf))
+    }
+
+    private constructor(readonly bytes: Uint8Array, readonly asHex: string) {}
+}
+
 
 const USER_ID_BYTES = 32;
 const SIGNATURE_BYTES = 64;
