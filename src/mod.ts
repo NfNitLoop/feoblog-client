@@ -2,8 +2,13 @@
 
 
 import { Item, ItemList, type ItemListEntry, fromBinary, ItemSchema, ItemListSchema} from "./protobuf/types.ts";
-import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58 } from "./shim.ts";
-import nacl from "tweetnacl"
+import { bytesToHex, decodeBase58, decodeBase58Check, encodeBase58, encodeBase58Check } from "./shim.ts";
+import * as ed from "@noble/ed25519"
+import {sha512} from "@noble/hashes/sha512"
+
+// enable sync operations in ed.*:
+// See: https://github.com/paulmillr/noble-ed25519
+ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
 
 /**
  * A client to GET/PUT FeoBlog Items.
@@ -473,7 +478,7 @@ export class Signature {
     }
 
     isValidSync(userID: UserID, bytes: Uint8Array): boolean {
-        return nacl.sign.detached.verify(bytes, this.bytes, userID.bytes)
+        return ed.verify(this.bytes, bytes, userID.bytes)
     }
 
     static fromString(signature: string): Signature {
@@ -524,7 +529,6 @@ export class Signature {
  * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
  */
 export class PrivateKey {
-    readonly userID: UserID;
 
     static fromBase58(privateKey: string): PrivateKey {
 
@@ -550,18 +554,40 @@ export class PrivateKey {
             throw "Invalid Key"
         }
 
-        // Signing is not usually a bottleneck so just using current thread:
-        let keypair = nacl.sign.keyPair.fromSeed(buf);        
-
-        return new PrivateKey(keypair, privateKey)
+        return PrivateKey.fromBytes(buf)
     }
 
-    private constructor(private keyPair: nacl.SignKeyPair, readonly asBase58: string) {
-        this.userID = UserID.fromBytes(keyPair.publicKey)
+    /**
+     * Create a new, random Private Key. (and its associated public key, aka UserID.)
+     */
+    static createNew(): PrivateKey {
+        return PrivateKey.fromBytes(ed.utils.randomPrivateKey())
     }
 
+    private static fromBytes(bytes: Uint8Array): PrivateKey {
+        return new PrivateKey(bytes)
+    }
+
+    readonly userID: UserID;
+    readonly asBase58: string
+    #private: Uint8Array
+
+    private constructor(bytes: Uint8Array) {
+        this.#private = bytes
+        this.userID = UserID.fromBytes(ed.getPublicKey(bytes))
+        this.asBase58 = encodeBase58Check(bytes)
+    }
+
+    /**
+     * @deprecated use sign() instead.
+     */
     signDetached(message: Uint8Array): Uint8Array {
-        return nacl.sign.detached(message, this.keyPair.secretKey)
+        return ed.sign(message, this.#private)
+    }
+
+    /** Create a detached signature over a given message */
+    sign(message: Uint8Array): Signature {
+        return Signature.fromBytes(ed.sign(message, this.#private))
     }
            
 }

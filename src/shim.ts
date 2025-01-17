@@ -25,3 +25,7 @@ export function decodeBase58(value: string): Uint8Array {
 export function decodeBase58Check(value: string): Uint8Array {
     return bs58c.decode(value)
 }
+
+export function encodeBase58Check(value: Uint8Array): string {
+    return bs58c.encode(value)
+}
