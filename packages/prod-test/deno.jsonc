@@ -1,0 +1,10 @@
+{
+    // Test the "production" Diskuto server. (blog.nfnitloop.com)
+    // These are hacky tests that were easy to write and run, but not very well isolated.
+    "tasks": {
+        "test": {
+            "description": "Just run the network tests.",
+            "command": "deno test -N"
+        }
+    }
+}

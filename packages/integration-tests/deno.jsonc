@@ -1,0 +1,11 @@
+{
+    "tasks": {
+        "test": {
+            "command": "deno test -A --coverage"
+        },
+        "coverage": {
+            // "dependencies": ["test"],
+            "command": "deno coverage --lcov --output=cov.lcov && genhtml -o html_cov cov.lcov --ignore-errors inconsistent,corrupt"
+        }
+    }
+}

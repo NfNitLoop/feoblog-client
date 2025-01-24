@@ -1,9 +1,8 @@
 {
-  "name": "@nfnitloop/feoblog-client",
+  "name": "@diskuto/client",
   "version": "0.9.1",
   "exports": {
     ".": "./src/mod.ts",
-    // Types for FeoBlog Items:
     "./types": "./src/protobuf/types.ts",
   },
   "license": "TBD",
@@ -19,16 +18,15 @@
 
   "tasks": {
     "test": "deno task test:unit && deno task test:publish",
-    "test:unit": "deno test --allow-net",
+    "test:unit": "deno test --allow-net --ignore=packages",
     "test:publish": "deno publish --dry-run --allow-dirty",
     "regen-proto": "cd src/protobuf && ./regenerate.ts",
   },
 
-  "test": {
-    "exclude": [
-      "npm-build"
-    ]
-  },
+  "workspace": [
+    "packages/prod-test",
+    "packages/integration-tests"
+  ],
   "imports": {
     "@bufbuild/protobuf": "npm:@bufbuild/protobuf@^2.2.1",
     "@noble/ed25519": "jsr:@noble/ed25519@^2.2.3",

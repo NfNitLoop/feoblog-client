@@ -92,6 +92,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         return bytes
     }
 
+    // TODO: Returning a Response puts the burden on cleanup on the caller. Fix that. 
     /**
      * Write an item to the server.
      * This assumes you have provided a valid userID & signature for the given bytes.
@@ -108,11 +109,11 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
                 body: bytes,
             })
             if (!response.ok) {
+                response.body?.cancel()
                 throw `Error uploading Item: ${response.status} ${response.statusText}`
             }
 
         } catch (e) {
-            console.error("PUT exception:", e)
             throw e
         }
 
@@ -205,8 +206,10 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
             userID = UserID.fromString(userID)
         }
 
-        let url = `${this.base_url}/u/${userID}/profile/proto3`
-        let response = await fetch(url)
+        const url = `${this.base_url}/u/${userID}/profile/proto3`
+        const response = await fetch(url)
+        const bytes = new Uint8Array(await response.arrayBuffer())
+
 
         if (response.status == 404) { return null }
 
@@ -215,7 +218,6 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         }
         let lengthHeader = response.headers.get("content-length")
         if (lengthHeader === null) {
-            console.log("response:", response)
             throw `The server didn't return a length for ${url}`
         }
         let length = parseInt(lengthHeader)
@@ -232,8 +234,6 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         }
         let signature = Signature.fromString(sigHeader)
 
-        let buf = await response.arrayBuffer()
-        let bytes = new Uint8Array(buf)
 
         if (!await signature.isValid(userID, bytes)) {
             throw `Invalid signature for ${url}`
@@ -330,7 +330,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
 
         let response = await fetch(url)
         if (!response.ok) {
-            console.error(`non-OK response from ${url}`, response)
+            await response.body?.cancel()
             throw `Invalid response: ${response.status}: ${response.statusText}`
         }
 

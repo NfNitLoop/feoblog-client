@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-unused-vars prefer-const
-import {Client, UserID, Signature } from "../src/mod.ts"
-import type * as protobuf from "../src/protobuf/feoblog.ts"
+import {Client, UserID, Signature } from "@diskuto/client"
+import type * as protobuf from "@diskuto/client/types"
 
 import { assert, assertEquals, assertExists } from "@std/assert";
 
