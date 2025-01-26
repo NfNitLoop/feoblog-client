@@ -1,8 +1,8 @@
 import { Server } from "./helper.ts";
 import { PrivateKey, Signature } from "@diskuto/client"
-import { assert, assertEquals, assertRejects, assertStringIncludes, assertThrows } from "jsr:@std/assert"
+import { assert, assertEquals, assertRejects, assertStringIncludes } from "jsr:@std/assert"
 
-const BIN = "bin/feoblog"
+const BIN = "bin/diskuto"
 
 Deno.test(async function integration(t) {
     await using server = new Server({binary: BIN})

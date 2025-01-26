@@ -1,23 +1,24 @@
 #!/usr/bin/env -S deno run -A
-// deno-lint-ignore-file prefer-const
 
-// Regenerate the feoblog.ts protobuf implementation from feoblog.proto.
-import { join as pathJoin } from "jsr:@std/path@1.0.7";
-import { exists as fileExists } from "jsr:@std/fs@1.0.5"
+/**
+ * Regenerate the protobuf implementation from its definition.
+ * 
+ * @module
+ */
+
 import $ from "jsr:@david/dax@0.42.0"
 
-
 export async function main() {
-    const protoFile = "feoblog.proto"
-    const outputFile = "feoblog.ts"
+    const protoFile = "diskuto.proto"
+    const outputFile = "diskuto.ts"
 
     // Installing the plugin into an npm directory here locally:
-    const pluginDir = "plugin"
-    const pluginPath = pathJoin(pluginDir, "node_modules", ".bin", "protoc-gen-es")
-    const tempDir = pathJoin(pluginDir, "build")
-    const tempFile = pathJoin(tempDir, outputFileFor(protoFile))
+    const pluginDir = $.path("plugin")
+    const pluginPath = pluginDir.resolve("node_modules", ".bin", "protoc-gen-es")
+    const tempDir = pluginDir.resolve("build")
+    const tempFile = tempDir.resolve(outputFileFor(protoFile))
 
-    if (!await fileExists(protoFile)) { 
+    if (!await $.path(protoFile).exists) { 
         throw new Error(`Couldn't find "${protoFile}". Might be running from wrong directory`)
     }
 
@@ -39,10 +40,6 @@ export async function main() {
     
     console.log("Done")
 }
-
-
-
-
 
 // Figure out the file name that protoc output from our intput.
 // foo.proto -> foo_pb.ts

@@ -16,7 +16,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
  * A client to GET/PUT FeoBlog Items.
  * 
  * {@link https://github.com/nfnitloop/feoblog}
- * {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/data_format.md}
+ * {@link https://github.com/diskuto/diskuto-api/blob/main/docs/data_format.md}
  * 
  * 
  * A client takes a base_url parameter and knows how to construct REST URLs based off of that.
@@ -24,15 +24,15 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
  */
  export class Client {
 
-    private base_url: string;
+    #baseUrl: string;
 
     constructor(config: Config) {
-        this.base_url = config.base_url
+        this.#baseUrl = config.baseUrl
     }
 
     /** The URL of the API server that this client will fetch from. */
     get url(): string {
-        return this.base_url
+        return this.#baseUrl
     }
 
     /**
@@ -57,7 +57,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
             signature = Signature.fromString(signature)
         }
 
-        let url = `${this.base_url}/u/${userID}/i/${signature}/proto3`
+        let url = `${this.#baseUrl}/diskuto/users/${userID}/items/${signature}`
         let response = await fetch(url)
 
         if (response.status == 404) { return null }
@@ -100,7 +100,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
      */
     async putItem(userID: UserID, signature: Signature, bytes: Uint8Array): Promise<Response> {
     
-        let url = `${this.base_url}/u/${userID}/i/${signature}/proto3`
+        let url = `${this.#baseUrl}/diskuto/users/${userID}/items/${signature}`
         
         let response: Response
         try {
@@ -131,7 +131,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
             if (exists) return
         }
 
-        let url = this.attachmentURL(userID, signature, fileName)
+        let url = this.#attachmentURL(userID, signature, fileName)
         let response: Response
         try {
             response = await fetch(url, {
@@ -150,15 +150,15 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         }
     }
 
-    private attachmentURL(userID: UserID, signature: Signature, fileName: string) {
-        return `${this.base_url}/u/${userID}/i/${signature}/files/${fileName}`
+    #attachmentURL(userID: UserID, signature: Signature, fileName: string) {
+        return `${this.#baseUrl}/diskuto/users/${userID}/items/${signature}/files/${fileName}`
     }
 
     /**
      * Get metadata a server has about an attachment.
      */
     async getAttachmentMeta(userID: UserID, signature: Signature, fileName: string): Promise<AttachmentMeta> {
-        let url = this.attachmentURL(userID, signature, fileName)
+        let url = this.#attachmentURL(userID, signature, fileName)
         let response = await fetch(url, {
             method: "HEAD",
         })
@@ -182,7 +182,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
      */
     // TODO: Have attachment-meta get the file size?  max file size here? streaming option?
     async getAttachment(userID: UserID, signature: Signature, fileName: string): Promise<ArrayBuffer|null> {
-        let url = this.attachmentURL(userID, signature, fileName)
+        let url = this.#attachmentURL(userID, signature, fileName)
         let response = await fetch(url)
         if (response.status == 404) {
             return null
@@ -206,7 +206,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
             userID = UserID.fromString(userID)
         }
 
-        const url = `${this.base_url}/u/${userID}/profile/proto3`
+        const url = `${this.#baseUrl}/diskuto/users/${userID}/profile`
         const response = await fetch(url)
         const bytes = new Uint8Array(await response.arrayBuffer())
 
@@ -255,28 +255,28 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
      * An async stream over items on the site's home page.
      */
     async * getHomepageItems(params?: ItemOffsetParams): AsyncGenerator<ItemListEntry> {
-        yield* this.streamItemList("/homepage/proto3", params)
+        yield* this.streamItemList("/diskuto/homepage", params)
     }
 
     /**
      * An async stream over a user's feed. (i.e.: content of those they follow, and themself)
      */
     async * getUserFeedItems(userID: UserID, params?: ItemOffsetParams): AsyncGenerator<ItemListEntry> {
-        yield* this.streamItemList(`/u/${userID}/feed/proto3`, params)
+        yield* this.streamItemList(`/diskuto/users/${userID}/feed`, params)
     }
 
     /**
      * An async stream over a users's Items.
      */
     async * getUserItems(userID: UserID, params?: ItemOffsetParams): AsyncGenerator<ItemListEntry> {
-        yield* this.streamItemList(`/u/${userID}/proto3`, params)
+        yield* this.streamItemList(`/diskuto/users/${userID}/items`, params)
     }
 
     /**
      * An async stream of all known replies to an item.
      */
     async * getReplyItems(userID: UserID, signature: Signature): AsyncGenerator<ItemListEntry> {
-        yield* this.streamItemList(`/u/${userID}/i/${signature}/replies/proto3`)
+        yield* this.streamItemList(`/diskuto/users/${userID}/items/${signature}/replies`)
     }
 
     private async * streamItemList(url: string, params?: ItemOffsetParams): AsyncGenerator<ItemListEntry> {
@@ -285,7 +285,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
 
         while (true) {
 
-            let list: ItemList = await this.getItemList(url, offset)
+            let list: ItemList = await this.#getItemList(url, offset)
             if (!isBefore) {
                 /// We want to iterate in chronological order for this case, but ItemList is defined to be
                 /// in reverse chronological order. Reverse it:
@@ -314,11 +314,11 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         }
     }
 
-    // itemsPath: relative path to the thing that yields an ItemsList, ex: /homepage/proto3
+    // itemsPath: relative path to the thing that yields an ItemsList, ex: /homepage
     // params: Any HTTP GET params we might send to that path for pagination.
-    private async getItemList(itemsPath: string, params?: ItemOffsetParams): Promise<ItemList> {
+    async #getItemList(itemsPath: string, params?: ItemOffsetParams): Promise<ItemList> {
 
-        let url = this.base_url + itemsPath
+        let url = this.#baseUrl + itemsPath
         if (params) {
             let sp = new URLSearchParams()
             for (let [key, value] of Object.entries(params)) {
@@ -402,13 +402,13 @@ export interface Config {
      * 
      * Ex: base_url = "https://fb.example.com:8080". or "" for this server.
      */
-    base_url: string
+    baseUrl: string
 }
 
 /**
  * UserIDs in FeoBlog are NaCL signing keys.
  * 
- * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
+ * See: {@link https://github.com/diskuto/diskuto-api/blob/main/docs/crypto.md}
  */
 export class UserID {
     toString(): string {
@@ -436,7 +436,7 @@ export class UserID {
             throw new Error("UserID not valid base58", {cause})
         }
     
-        UserID.validateBytes(buf)
+        UserID.#validateBytes(buf)
         return new UserID(buf, userID)
     }
 
@@ -449,7 +449,7 @@ export class UserID {
         }
     }
 
-    private static validateBytes(bytes: Uint8Array) {
+    static #validateBytes(bytes: Uint8Array) {
         if (bytes.length < USER_ID_BYTES) {
             throw "UserID too short"
         }
@@ -464,7 +464,7 @@ export class UserID {
     }
 
     static fromBytes(bytes: Uint8Array): UserID {
-        UserID.validateBytes(bytes)
+        UserID.#validateBytes(bytes)
         return new UserID(bytes, encodeBase58(bytes))
     }
 
@@ -474,7 +474,7 @@ export class UserID {
 /**
  * A detached NaCL signature over an Item.
  * 
- * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
+ * See: {@link https://github.com/diskuto/diskuto-api/blob/main/docs/crypto.md}
  */
 export class Signature {
     readonly bytes: Uint8Array
@@ -538,7 +538,7 @@ export class Signature {
  * They are only necessary to sign new pieces of content.
  * You should keep a PrivateKey in memory for as short a time as possible.
  * 
- * See: {@link https://github.com/NfNitLoop/feoblog/blob/develop/docs/crypto.md}
+ * See: {@link https://github.com/diskuto/diskuto-api/blob/main/docs/crypto.md}
  */
 export class PrivateKey {
 
