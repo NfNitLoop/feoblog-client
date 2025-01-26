@@ -10,7 +10,7 @@ const FIRST_POST = Signature.fromString("2F6NB6PYKDTPGTc9dfaQHpmPzd3LSjVgBuC6qa2
 const FIRST_SERVER = "https://blog.nfnitloop.com"
 
 Deno.test("fetching an item", async () => {
-    let client = new Client({base_url: FIRST_SERVER})
+    let client = new Client({baseUrl: FIRST_SERVER})
 
     let item = await client.getItem(OFFICIAL_FEOBLOG, FIRST_POST)
     assert(item != null)
@@ -32,7 +32,7 @@ Deno.test("fetching an item", async () => {
 })
 
 Deno.test("Fetching all posts", async() => {
-    let client = new Client({base_url: FIRST_SERVER})
+    let client = new Client({baseUrl: FIRST_SERVER})
 
     for await (let entry of client.getUserItems(OFFICIAL_FEOBLOG)) {
         let sig = Signature.fromBytes(entry?.signature?.bytes!)
@@ -43,7 +43,7 @@ Deno.test("Fetching all posts", async() => {
 })
 
 Deno.test("Fetching only some posts", async() => {
-    let client = new Client({base_url: FIRST_SERVER})
+    let client = new Client({baseUrl: FIRST_SERVER})
 
     const publicReleaseTimestamp = 1611195863721
     let entries = client.getUserItems(OFFICIAL_FEOBLOG, {before: publicReleaseTimestamp + 1})
@@ -53,7 +53,7 @@ Deno.test("Fetching only some posts", async() => {
 })
 
 Deno.test(async function profileItem() {
-    const client = new Client({base_url: FIRST_SERVER})
+    const client = new Client({baseUrl: FIRST_SERVER})
     const profile = await client.getProfile(OFFICIAL_FEOBLOG)
     assertExists(profile)
     console.log("displayName:", profile.item.itemType.value.displayName)
