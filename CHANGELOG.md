@@ -1,3 +1,12 @@
+v0.10.0
+=======
+
+Rename to "@diskuto/client"
+
+Breaking changes:
+ * `new Client({base_url})` -> `new Client({baseUrl})`
+ * URL layout has changed and will only work w/ new Diskuto REST API.
+
 v0.8.0
 ======
 
