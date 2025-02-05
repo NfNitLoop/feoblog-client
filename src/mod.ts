@@ -13,21 +13,20 @@ import type {Item, ItemList, ItemListEntry, File, Profile} from "./protobuf/type
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
 
 /**
- * A client to GET/PUT FeoBlog Items.
+ * An API client for the Diskuto P2P social network.
  * 
- * {@link https://github.com/nfnitloop/feoblog}
+ * {@link https://github.com/diskuto/diskuto-api}
  * {@link https://github.com/diskuto/diskuto-api/blob/main/docs/data_format.md}
- * 
- * 
- * A client takes a base_url parameter and knows how to construct REST URLs based off of that.
- * To communicate among 2+ servers, instantiate a client for each server.
  */
  export class Client {
 
     #baseUrl: string;
+    #agent?: string;
 
     constructor(config: Config) {
         this.#baseUrl = config.baseUrl
+
+        this.#agent = config.userAgent
     }
 
     /** The URL of the API server that this client will fetch from. */
@@ -58,7 +57,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         }
 
         let url = `${this.#baseUrl}/diskuto/users/${userID}/items/${signature}`
-        let response = await fetch(url)
+        let response = await this.#fetch(url)
 
         if (response.status == 404) { return null }
 
@@ -104,7 +103,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         
         let response: Response
         try {
-            response = await fetch(url, {
+            response = await this.#fetch(url, {
                 method: "PUT",
                 body: bytes,
             })
@@ -134,7 +133,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         let url = this.#attachmentURL(userID, signature, fileName)
         let response: Response
         try {
-            response = await fetch(url, {
+            response = await this.#fetch(url, {
                 method: "PUT",
                 body: blob,
             })
@@ -159,7 +158,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
      */
     async getAttachmentMeta(userID: UserID, signature: Signature, fileName: string): Promise<AttachmentMeta> {
         let url = this.#attachmentURL(userID, signature, fileName)
-        let response = await fetch(url, {
+        let response = await this.#fetch(url, {
             method: "HEAD",
         })
 
@@ -183,7 +182,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
     // TODO: Have attachment-meta get the file size?  max file size here? streaming option?
     async getAttachment(userID: UserID, signature: Signature, fileName: string): Promise<ArrayBuffer|null> {
         let url = this.#attachmentURL(userID, signature, fileName)
-        let response = await fetch(url)
+        let response = await this.#fetch(url)
         if (response.status == 404) {
             return null
         }
@@ -207,7 +206,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         }
 
         const url = `${this.#baseUrl}/diskuto/users/${userID}/profile`
-        const response = await fetch(url)
+        const response = await this.#fetch(url)
         const bytes = new Uint8Array(await response.arrayBuffer())
 
 
@@ -328,7 +327,7 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
             url = `${url}?${sp}`
         }
 
-        let response = await fetch(url)
+        let response = await this.#fetch(url)
         if (!response.ok) {
             await response.body?.cancel()
             throw `Invalid response: ${response.status}: ${response.statusText}`
@@ -337,6 +336,19 @@ ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m))
         let buf = await response.arrayBuffer()
         let bytes = new Uint8Array(buf)
         return fromBinary(ItemListSchema, bytes)
+    }
+
+    /** Wraps all fetch calls so that we can inject User-Agent, if configured. */
+    #fetch(...args: Parameters<typeof fetch>) {
+        const agent = this.#agent
+        if (!agent) {
+            return fetch(...args)
+        }
+
+        const req = new Request(...args)
+        req.headers.set("User-Agent", agent)
+
+        return fetch(req)
     }
 }
 
@@ -390,19 +402,27 @@ export type GetItemOptions = {
  * When we load a profile, we don't know its signature until it's loaded.
  * Return the signature w/ the Item
  */
-export interface ProfileResult {
+export type ProfileResult = {
     item: ProfileItem
     signature: Signature
     bytes: Uint8Array
 }
 
-export interface Config {
+export type Config = {
     /**
      * The base URL of a feoblog server.
      * 
      * Ex: base_url = "https://fb.example.com:8080". or "" for this server.
      */
     baseUrl: string
+
+    /** 
+     * Configure the client to send a different User-Agent HTTP header.
+     * 
+     * You should **not** use this in browsers, due to a bug in Chrome.
+     * See: <https://issues.chromium.org/issues/40450316>
+     */
+    userAgent?: string 
 }
 
 /**

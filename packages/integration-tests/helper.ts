@@ -14,7 +14,10 @@ export class Server implements AsyncDisposable {
     #tempDir?: string
     
     readonly port = Math.floor(Math.random() * 10_000) + 10_000
-    readonly client = new Client({baseUrl: `http://localhost:${this.port}`})
+    readonly client = new Client({
+        baseUrl: `http://localhost:${this.port}`,
+        userAgent: "helper-client"
+    })
     #proc?: Deno.ChildProcess;
     #procShutdown?: Promise<void>;
     
