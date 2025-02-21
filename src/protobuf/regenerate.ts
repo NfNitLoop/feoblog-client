@@ -47,12 +47,6 @@ function outputFileFor(inputProto: string): string {
     return inputProto.replace(".proto", "_pb.ts")
 }
 
-// Work around https://github.com/denoland/deno/issues/16942
-function cmd(name: string): string {
-    if (Deno.build.os == "windows") { return `${name}.cmd` } 
-    return name
-}
-
 if (import.meta.main) {
     await main()
 }
