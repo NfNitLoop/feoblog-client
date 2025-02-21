@@ -43,5 +43,16 @@
     "@std/testing": "jsr:@std/testing@^1.0.3",
     "bs58": "npm:bs58@^6.0.0",
     "bs58check": "npm:bs58check@4",
+  },
+
+  "lint": {
+    "plugins": [
+      "jsr:@nfnitloop/lints@^1.1"
+    ],
+    "exclude": [
+      // Don't lint a generated file:
+      // TODO: But, why is it generating with CRLFs?
+      "src/protobuf/diskuto.ts"
+    ]
   }
 }

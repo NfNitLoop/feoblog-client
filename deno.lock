@@ -5,6 +5,7 @@
     "jsr:@david/path@0.2": "0.2.0",
     "jsr:@david/which@~0.4.1": "0.4.1",
     "jsr:@nfnitloop/better-iterators@1.5.0": "1.5.0",
+    "jsr:@nfnitloop/lints@^1.1.0": "1.1.0",
     "jsr:@noble/ed25519@^2.2.3": "2.2.3",
     "jsr:@noble/hashes@^1.7.0": "1.7.0",
     "jsr:@std/assert@*": "1.0.6",
@@ -56,6 +57,9 @@
     },
     "@nfnitloop/better-iterators@1.5.0": {
       "integrity": "cf528c1e1494cffb43e17c5752ecd8edd75492f51246440498c1f311d3fb65cb"
+    },
+    "@nfnitloop/lints@1.1.0": {
+      "integrity": "ddba52b1ab63750ebd3d8e2e91294bdc125bfb0a3b8866c91244621a2eeef78c"
     },
     "@noble/ed25519@2.2.3": {
       "integrity": "77d984ee6b823c8b1a4a36aa56105d60e696a4e7b599b821712d1251481e2f9c"

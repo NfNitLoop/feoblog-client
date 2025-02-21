@@ -8,7 +8,7 @@
 
 import $ from "jsr:@david/dax@0.42.0"
 
-export async function main() {
+export async function main(): Promise<void> {
     const protoFile = "diskuto.proto"
     const outputFile = "diskuto.ts"
 

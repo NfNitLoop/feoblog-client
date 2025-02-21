@@ -3,7 +3,7 @@
 import {resolve} from "jsr:@std/path@1"
 import $ from "jsr:@david/dax@0.42.0"
 import { Client, PrivateKey, UserID } from "@diskuto/client";
-import {create, ItemSchema, ProfileSchema, FollowSchema, toBinary} from "@diskuto/client/types"
+import {create, ItemSchema, ProfileSchema, FollowSchema, toBinary, ItemListEntry} from "@diskuto/client/types"
 import {delay} from "jsr:@std/async@1"
 import { lazy } from "jsr:@nfnitloop/better-iterators@1.5.0";
 
@@ -25,7 +25,7 @@ export class Server implements AsyncDisposable {
         this.#binary = resolve(import.meta.dirname!, binary)
     }
     
-    async start() {
+    async start(): Promise<void> {
         if (this.status != "new") {
             throw new Error("can't start when status is " + this.status)
         }
@@ -71,11 +71,11 @@ export class Server implements AsyncDisposable {
         .printCommand()
     }    
     
-    async [Symbol.asyncDispose]() {
+    async [Symbol.asyncDispose](): Promise<void> {
         await this.cleanup()
     }
     
-    async cleanup() {
+    async cleanup(): Promise<void> {
         await this.#stopProcess()
         await this.#cleanupDir()
     }
@@ -93,11 +93,11 @@ export class Server implements AsyncDisposable {
         console.log("cleaned up", dir)
     }
     
-    async homepage() {
+    async homepage(): Promise<ItemListEntry[]> {
         return await all(this.client.getHomepageItems())
     }
     
-    async post(privKey: PrivateKey, postText: string) {
+    async post(privKey: PrivateKey, postText: string): Promise<void> {
         const item = create(ItemSchema, {
             timestampMsUtc: BigInt(Date.now()),
             itemType: {
@@ -114,7 +114,7 @@ export class Server implements AsyncDisposable {
         response.body?.cancel()
     }
     
-    async addUser(userID: UserID, opts: { onHomepage: boolean; }) {
+    async addUser(userID: UserID, opts: { onHomepage: boolean; }): Promise<void> {
         const {onHomepage} = opts
         const args = []
         if (onHomepage) {
@@ -124,7 +124,7 @@ export class Server implements AsyncDisposable {
         await this.#exec("user", "add", userID.asBase58, ...args)
     }
     
-    async addFollow(privKey: PrivateKey, opts: { follow: UserID; }) {
+    async addFollow(privKey: PrivateKey, opts: { follow: UserID; }): Promise<void> {
         const {follow} = opts
         
         const oldProfile = await this.client.getProfile(privKey.userID)
@@ -150,7 +150,7 @@ export class Server implements AsyncDisposable {
         await response.body?.cancel()
     }
     
-    async posts(userID: UserID) {
+    async posts(userID: UserID): Promise<ItemListEntry[]> {
         return await all(this.client.getUserItems(userID))
     }
     

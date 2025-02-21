@@ -368,7 +368,7 @@ function profileItem(item: Item): ProfileItem {
  * Note: Currently, you should only specify `before` XOR `after`.
  */
 // TODO: Remove the above restriction.
-export interface ItemOffsetParams {
+export type ItemOffsetParams = {
     /** timestamp in ms utc before which we want to query for items */
     before?: number
 
