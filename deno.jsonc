@@ -48,11 +48,6 @@
   "lint": {
     "plugins": [
       "jsr:@nfnitloop/lints@^1.1"
-    ],
-    "exclude": [
-      // Don't lint a generated file:
-      // TODO: But, why is it generating with CRLFs?
-      "src/protobuf/diskuto.ts"
     ]
   }
 }

@@ -23,6 +23,7 @@ export async function main(): Promise<void> {
     }
 
     // Make sure we've got the version of @bufbuild/protoc-gen-es from package.json:
+    // TODO: Deno/npm support is pretty good. Can we skip the call to `npm install`?
     $.setPrintCommand(true)
     await $`npm install`.cwd(pluginDir)
 
@@ -36,7 +37,10 @@ export async function main(): Promise<void> {
     ]
     await $`${cmd}`
 
-    await $`mv ${tempFile} ${outputFile}`
+    // protoc-gen-es seems to always generate with CRLF. Eww.
+    const src = await tempFile.readText()
+    await tempFile.remove()
+    await $.path(outputFile).writeText(src.replaceAll(/\r\n/g, "\n"))
     
     console.log("Done")
 }
