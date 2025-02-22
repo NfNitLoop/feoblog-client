@@ -14,7 +14,8 @@ export async function main(): Promise<void> {
 
     // Installing the plugin into an npm directory here locally:
     const pluginDir = $.path("plugin")
-    const pluginPath = pluginDir.resolve("node_modules", ".bin", "protoc-gen-es")
+    const pluginName = "protoc-gen-es"
+    const pluginPath = pluginDir.resolve("bin", pluginName)
     const tempDir = pluginDir.resolve("build")
     const tempFile = tempDir.resolve(outputFileFor(protoFile))
 
@@ -22,10 +23,21 @@ export async function main(): Promise<void> {
         throw new Error(`Couldn't find "${protoFile}". Might be running from wrong directory`)
     }
 
-    // Make sure we've got the version of @bufbuild/protoc-gen-es from package.json:
-    // TODO: Deno/npm support is pretty good. Can we skip the call to `npm install`?
     $.setPrintCommand(true)
-    await $`npm install`.cwd(pluginDir)
+    const installGen = [
+        "deno", "install",
+        // Note: Don't even need write access – `protoc` does the write:
+        "--allow-env",
+        "--force",
+        // Makes --global actually be ... not so global.
+        // Install into a known path so that we can reference it
+        "--global", "--root", pluginDir,
+        // For some reason, deno can't infer a name here. Weird:
+        "--name", pluginName,
+        "--quiet",
+        "npm:@bufbuild/protoc-gen-es@2.2.3"
+    ]
+    await $`${installGen}`
 
     const cmd = [
         "protoc",
