@@ -6,7 +6,7 @@
  * @module
  */
 
-import $ from "jsr:@david/dax@0.42.0"
+import $, { type Path } from "jsr:@david/dax@0.42.0"
 
 export async function main(): Promise<void> {
     const protoFile = "diskuto.proto"
@@ -15,7 +15,7 @@ export async function main(): Promise<void> {
     // Installing the plugin into an npm directory here locally:
     const pluginDir = $.path("plugin")
     const pluginName = "protoc-gen-es"
-    const pluginPath = pluginDir.resolve("bin", pluginName)
+    const pluginPath = crossPlatformBinary(pluginDir.resolve("bin", pluginName))
     const tempDir = pluginDir.resolve("build")
     const tempFile = tempDir.resolve(outputFileFor(protoFile))
 
@@ -44,7 +44,7 @@ export async function main(): Promise<void> {
         "-I", ".",
         `--es_out=${tempDir}`,
         "--es_opt=target=ts",
-        `--plugin=${pluginPath}`,
+        `--plugin=${pluginName}=${pluginPath}`,
         protoFile,
     ]
     await $`${cmd}`
@@ -61,6 +61,17 @@ export async function main(): Promise<void> {
 // foo.proto -> foo_pb.ts
 function outputFileFor(inputProto: string): string {
     return inputProto.replace(".proto", "_pb.ts")
+}
+
+// workaround for https://github.com/dsherret/dax/issues/281
+function crossPlatformBinary(bin: Path): Path {
+    if (Deno.build.os != "windows") {
+        // Most can just execute a script:
+        return bin
+    }
+
+    // On Windows, Deno makes a shell wrapper with a .cmd suffix:
+    return bin.withBasename(bin.basename() + ".cmd")
 }
 
 if (import.meta.main) {
